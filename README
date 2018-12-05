@@ -1,0 +1,23 @@
+Package alb provides adapter enabling usage of http.Handler inside AWS
+Lambda running behind AWS ALB as described here:
+https://docs.aws.amazon.com/lambda/latest/dg/services-alb.html
+
+Usage example:
+
+    package main
+
+    import (
+    	"fmt"
+    	"net/http"
+
+    	"github.com/artyom/alb"
+    	"github.com/aws/aws-lambda-go/lambda"
+    )
+
+    func main() { lambda.Start(alb.Handler(http.HandlerFunc(hello))) }
+
+    func hello(w http.ResponseWriter, r *http.Request) {
+    	fmt.Fprintln(w, "Hello from AWS Lambda behind ALB")
+    }
+
+See documentation at https://godoc.org/github.com/artyom/alb

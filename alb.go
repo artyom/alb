@@ -98,7 +98,6 @@ func (h *lambdaHandler) Run(ctx context.Context, req request) (*response, error)
 		r.ContentLength = int64(len(req.Body))
 	}
 	recorder := httptest.NewRecorder()
-	// TODO: handle panics
 	h.handler.ServeHTTP(recorder, r)
 	res := recorder.Result()
 	out := &response{

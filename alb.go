@@ -67,7 +67,11 @@ type lambdaHandler struct {
 }
 
 func (h *lambdaHandler) Run(ctx context.Context, req request) (*response, error) {
-	u := &url.URL{Path: req.Path}
+	p, err := url.PathUnescape(req.Path)
+	if err != nil {
+		return nil, err
+	}
+	u := &url.URL{Path: p}
 	if len(req.Query) > 0 {
 		vals := make(url.Values, len(req.Query))
 		for k, v := range req.Query {

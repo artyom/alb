@@ -47,8 +47,8 @@ func Handler(h http.Handler) func(context.Context, request) (*response, error) {
 
 type request struct {
 	Method      string            `json:"httpMethod"`
-	Path        string            `json:"path"`
-	Query       map[string]string `json:"queryStringParameters"`
+	Path        string            `json:"path"`                  // escaped
+	Query       map[string]string `json:"queryStringParameters"` // escaped
 	Headers     map[string]string `json:"headers"`
 	Body        string            `json:"body"`
 	BodyEncoded bool              `json:"isBase64Encoded"`
@@ -67,21 +67,9 @@ type lambdaHandler struct {
 }
 
 func (h *lambdaHandler) Run(ctx context.Context, req request) (*response, error) {
-	p, err := url.PathUnescape(req.Path)
+	u, err := buildURL(req.Path, req.Query)
 	if err != nil {
 		return nil, err
-	}
-	u := &url.URL{Path: p}
-	if len(req.Query) > 0 {
-		vals := make(url.Values, len(req.Query))
-		for k, v := range req.Query {
-			v2, err := url.QueryUnescape(v)
-			if err != nil {
-				return nil, err
-			}
-			vals.Set(k, v2)
-		}
-		u.RawQuery = vals.Encode()
 	}
 	headers := make(http.Header, len(req.Headers))
 	for k, v := range req.Headers {
@@ -128,4 +116,26 @@ func (h *lambdaHandler) Run(ctx context.Context, req request) (*response, error)
 		out.BodyEncoded = true
 	}
 	return out, nil
+}
+
+// buildURL constructs url from already escaped path and query string parameters
+// minimizing allocations and escaping overhead.
+func buildURL(path string, query map[string]string) (*url.URL, error) {
+	if len(query) == 0 {
+		return url.Parse(path)
+	}
+	var b strings.Builder
+	b.WriteString(path)
+	b.WriteByte('?')
+	var i int
+	for k, v := range query {
+		if i != 0 {
+			b.WriteByte('&')
+		}
+		b.WriteString(k)
+		b.WriteByte('=')
+		b.WriteString(v)
+		i++
+	}
+	return url.Parse(b.String())
 }

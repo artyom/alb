@@ -71,7 +71,11 @@ func (h *lambdaHandler) Run(ctx context.Context, req request) (*response, error)
 	if len(req.Query) > 0 {
 		vals := make(url.Values, len(req.Query))
 		for k, v := range req.Query {
-			vals.Set(k, v)
+			v2, err := url.QueryUnescape(v)
+			if err != nil {
+				return nil, err
+			}
+			vals.Set(k, v2)
 		}
 		u.RawQuery = vals.Encode()
 	}

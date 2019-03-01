@@ -19,6 +19,17 @@
 //	func hello(w http.ResponseWriter, r *http.Request) {
 //		fmt.Fprintln(w, "Hello from AWS Lambda behind ALB")
 //	}
+//
+// Note: since both request and reply to/from AWS Lambda are passed as
+// json-encoded payloads, their sizes are limited. AWS documentation states
+// that: "The maximum size of the request body that you can send to a Lambda
+// function is 1 MB. [...] The maximum size of the response JSON that the Lambda
+// function can send is 1 MB." Exact limit of response size also depends on
+// whether its body is valid utf8 or not, as non-utf8 payloads are transparently
+// base64-encoded, which adds some overhead.
+//
+// For further details see
+// https://docs.aws.amazon.com/elasticloadbalancing/latest/application/lambda-functions.html
 package alb
 
 import (
